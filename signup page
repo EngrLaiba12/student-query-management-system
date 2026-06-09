@@ -1,0 +1,283 @@
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/material.dart';
+import '../startup/login.dart';
+import '../startup/user_offical.dart';
+
+class Signup extends StatefulWidget {
+  @override
+  SignupPage createState() => SignupPage();
+}
+
+class SignupPage extends State<Signup> {
+  final _formKey = GlobalKey<FormState>();
+
+
+  bool _obscureText = true;
+
+  final _nameController = TextEditingController();
+  final _rollController = TextEditingController();
+  final _emailController = TextEditingController();
+  final _passwordController = TextEditingController();
+
+  String? validatorEmail(String? email){
+    RegExp emailregex = RegExp(r'^[\w.-]+@[\w-]+\.\w{2,3}(\.\w{2,3})?$');
+    final isEmailValid = emailregex.hasMatch(email ?? '');
+    if (!isEmailValid) {
+      return 'please enter a valid email';
+    }
+    return null;
+  }
+
+  // void _submitForm() async {
+  //   if (_formKey.currentState!.validate()) {
+  //     // Save the form data to Firestore
+  //     await FirebaseFirestore.instance.collection('users').add({
+  //       'name': _nameController.text,
+  //       'last_name': _lastController.text,
+  //       'email': _emailController.text,
+  //       'password': _passwordController.text,
+  //     });
+  //
+  //     // Clear the form fields
+  //     //_nameController.clear();
+  //     //_lastController.clear();
+  //     //_emailController.clear();
+  //     //_passwordController.clear();
+  //
+  //     // Navigate to the user_offical page
+  //     Navigator.push(
+  //       context,
+  //       MaterialPageRoute(builder: (context) => user_offical()),
+  //     );
+  //   }
+  // }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      // appBar: AppBar(
+      //   backgroundColor: Colors.transparent,
+      //   title: Row(
+      //     children: [
+      //
+      //       //SizedBox(width: 140),
+      //       // Container(alignment: Alignment.topRight,
+      //       //     child: Image.asset('lib/image/sqms-logo.png', height: 90, width: 90,)),
+      //     ],
+      //   ),
+      // ),
+      body: SingleChildScrollView(
+        child: Form(
+          key: _formKey,
+          child: SafeArea(
+            child: Padding(
+              padding: const EdgeInsets.all(12.0),
+              child: Column(
+                children: [
+                  const Padding(
+                    padding: EdgeInsets.all(12.0),
+                    child: Text('Create an Account',
+                      style: TextStyle(
+                        fontSize: 24,
+                        fontWeight: FontWeight.w800,
+                      ),),
+                  ),
+                  const Divider(color: Colors.black54,),
+                  const SizedBox(height: 20),
+                  Container(
+                    height: 50,
+                    width: 300,
+                    child: TextFormField(
+                      controller: _nameController,
+                      decoration: InputDecoration(
+                        labelText: 'Your Name',
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(15),
+                        ),
+                      ),
+                      validator:(value) {
+                        if (value == null || value.isEmpty){
+                          return 'Enter name';}
+                        else if (!RegExp(r"^[a-zA-Z]")
+                            .hasMatch(value)) {
+                          return 'must be alphabets';}
+                        return null;}, //validator
+                      autovalidateMode: AutovalidateMode.onUserInteraction,
+                    ),
+                  ),
+                  const  SizedBox(height: 20,),
+                  Container(
+                    height: 50,
+                    width: 300,
+                    child: TextFormField(
+                      controller: _rollController,
+                      decoration: InputDecoration(
+                        labelText: 'Roll no.',
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(15),
+                        ),),
+                      validator:(value) {
+                        if (value == null || value.isEmpty){
+                          return 'Enter Roll No.';}
+                        else if (!RegExp(r"^[0-9]{5}$").hasMatch(value))
+                        {
+                          return 'Must be number';
+                        }
+                        return null;
+                      }, //validator
+                      autovalidateMode: AutovalidateMode.onUserInteraction,
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+                  Container(
+                    height: 50,
+                    width: 300,
+                    child: TextFormField(
+                      controller: _emailController,
+                      decoration: InputDecoration(
+                        labelText: 'Email',
+                        hintText: 'ABC@gmail.com',
+                        border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(15)
+                        ),
+                      ),
+                      keyboardType: TextInputType.emailAddress,
+                      validator: validatorEmail,
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+                  Container(
+                    height: 50,
+                    width: 300,
+                    child: TextFormField(
+                      obscureText: _obscureText,
+                      controller: _passwordController,
+                      decoration: InputDecoration(
+                        labelText: 'Password',
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(15),
+                        ),
+                        suffixIcon: IconButton(
+                          icon: Icon(
+                            _obscureText ? Icons.visibility : Icons.visibility_off,
+                          ),
+                          onPressed: () {
+                            setState(() {
+                              _obscureText = !_obscureText;
+                            });
+                          },
+                        ),
+                      ),
+                      validator:(value) {
+                        if (value == null || value.isEmpty){
+                          return 'Enter Password';}
+                        else if (value.length <7) {
+                          return 'Length must be 7';}
+                        return null;}, //validator
+                      autovalidateMode: AutovalidateMode.onUserInteraction,
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+                  Container(
+                    height: 50,
+                    width: 300,
+                    child: TextFormField(
+                      obscureText: _obscureText,
+                      decoration: InputDecoration(
+                        labelText: 'Confirm Password',
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(15),
+                        ),
+                      ),
+                      validator:(value) {
+                        if (value == null || value.isEmpty){
+                          return 'Enter Password';}
+                        else if (value.length <7) {
+                          return 'Length must be 7';}
+                        else if (value != _passwordController.text) {
+                          return 'Password incorrect!';}
+                        return null;
+                      }, //validator
+                    ),
+                  ),
+                  const SizedBox(height: 20.0),
+
+                  Center(
+                    child: ElevatedButton(
+                      style: ElevatedButton.styleFrom(
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(15),
+                          )),
+                      // onPressed: () {
+                      //   if (_formKey.currentState!.validate()){
+                      //   Navigator.push(
+                      //     context,
+                      //     MaterialPageRoute(builder: (context) => user_offical()),);
+                      // } },
+                      onPressed: () async {
+                        if (_formKey.currentState!.validate()) {
+                          try {
+                            UserCredential userCredential =
+                            await FirebaseAuth.instance.createUserWithEmailAndPassword(
+                              email: _emailController.text,
+                              password: _passwordController.text,
+                            );
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => user_offical(
+                                  name: _nameController.text,
+                                  rollno: _rollController.text,
+                                  email: _emailController.text,
+                                  password: _passwordController.text,
+                                ),
+                              ),
+                            );
+                          } on FirebaseAuthException catch (e) {
+                            if (e.code == 'weak-password') {
+                              ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+                                content: Text('The password provided is too weak.'),
+                              ));
+                            } else if (e.code == 'email-already-in-use') {
+                              ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+                                content: Text('The account already exists for that email.'),
+                              ));
+                            }
+                          }
+                          //catch (e) {
+                          //   ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+                          //     content: Text('An error occurred while creating the account.'),
+                          //
+                          //   ));
+                          // }
+                        }
+                      },
+
+                      //onPressed: _submitForm,
+                      child: const Text('Next'),
+                    ),
+                  ),
+                  const SizedBox(height: 50,),
+                  const Divider(color: Colors.black54),
+                  Row(
+                    children: [
+                      const Text('Already have an account',
+                        style: TextStyle(
+                          fontSize: 14,
+                        ),),
+                      TextButton(onPressed: ()=> {
+                        Navigator.push(context,
+                            MaterialPageRoute(builder: (context) => const Login()))
+                      },
+                          child: const Text('Sign in')),
+                    ],
+                  ),
+
+                ],),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
