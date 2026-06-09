@@ -1,0 +1,317 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter/material.dart';
+import 'package:login/pages/startup/signup.dart';
+import '../admin_pages/admin_page.dart';
+import '../panels/VC.dart';
+import '../panels/dep_coordinator.dart';
+import '../panels//exam_cell.dart';
+import '../panels/hod_panel.dart';
+import '../panels/student-panel.dart';
+import '../panel_pages/panel_signup.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+
+import '../panels/coordinator.dart';
+import '../panels/dean.dart';
+import '../panels/instructor.dart';
+import '../panels/it_support_center.dart';
+import '../panels/treasure_office.dart';
+import 'forget_password.dart';
+
+class Login extends StatefulWidget {
+  const Login({super.key});
+
+  @override
+  State<Login> createState() => _LoginState();
+}
+
+class _LoginState extends State<Login> {
+
+  bool _obscureText = true;
+  final emailController = TextEditingController();
+  final passwordController = TextEditingController();
+  String? _selectedUserType ;
+  bool _isLoading = false;
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: Colors.grey.shade300,
+      body: Center(
+        child: SingleChildScrollView(
+          child: Column(
+            children: [
+              Padding(
+                padding: const EdgeInsets.all(10.0),
+                child: Image.asset('lib/Image/sqms-logo.png', height: 200, width: 200),
+              ),
+              const SizedBox(height: 10,),
+              Center(
+                child: Container(
+                  padding: const EdgeInsets.all(10),
+                  width: 330,
+                  color: Colors.white,
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      const Center(
+                        child: Text(
+                          'Sign in',
+                          style: TextStyle(
+                            fontSize: 24,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 15),
+                      const Text(
+                        'Select User Type:',
+                        style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
+                      ),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: ListTile(
+                              title: const Text('Student', style: TextStyle(fontSize: 12)),
+                              leading: Radio<String>(
+                                value: 'students',
+                                groupValue: _selectedUserType,
+                                onChanged: (value) {
+                                  setState(() {
+                                    _selectedUserType = value;
+                                  });
+                                },
+                              ),
+                            ),
+                          ),
+                          Expanded(
+                            child: ListTile(
+                              title: const Text('Faculty', style: TextStyle(fontSize: 12)),
+                              leading: Radio<String>(
+                                value: 'Faculty',
+                                groupValue: _selectedUserType,
+                                onChanged: (value) {
+                                  setState(() {
+                                    _selectedUserType = value;
+                                  });
+                                },
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                      SizedBox(
+                        height: 40,
+                        child: TextField(
+                          controller: emailController,
+                          decoration: const InputDecoration(
+                            border: OutlineInputBorder(),
+                            labelText: 'Email',
+                            icon: Icon(Icons.email),
+                            errorStyle: TextStyle(
+                              color: Colors.red,
+                              fontSize: 15,
+                            ),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 15),
+                      SizedBox(
+                        height: 40,
+                        child: TextFormField(
+                          obscureText: _obscureText,
+                          controller: passwordController,
+                          decoration: InputDecoration(
+                            border: const OutlineInputBorder(),
+                            labelText: 'Password',
+                            icon: const Icon(Icons.password),
+                            suffixIcon: IconButton(
+                              icon: Icon(
+                                _obscureText ? Icons.visibility : Icons.visibility_off,
+                              ),
+                              onPressed: () {
+                                setState(() {
+                                  _obscureText = !_obscureText;
+                                });
+                              },
+                            ),
+                          ),
+                          validator: (value) {
+                            if (value == null || value.isEmpty) {
+                              return 'Enter Password';
+                            } else if (value.length < 7) {
+                              return 'Length must be 7';
+                            }
+                            return null;
+                          },
+                        ),
+                      ),
+                      //const SizedBox(height: 5),
+                      Container(
+                        alignment: Alignment.topLeft,
+                        child: TextButton(
+                          onPressed: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(builder: (context) => Forget_password()),
+                            );
+                          },
+                          child: const Text(
+                            'Forget Password',
+                            style: TextStyle(
+                              fontSize: 12,
+                              color:  Colors.red
+                            ),
+                          ),
+                        ),
+                      ),
+                      Center(
+                        child:
+                        // _isLoading
+                        //     ? CircularProgressIndicator()
+                        //     :
+                        ElevatedButton(
+                          onPressed: () {
+                            // setState(() {
+                            //   _isLoading = true;
+                            // });
+                            handleLogin(context, emailController.text, passwordController.text);
+                          },
+                          style: ElevatedButton.styleFrom(
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(15),
+                            ),
+                          ),
+                          child: const Text('Login'),
+                        ),
+                      ),
+                      const SizedBox(height: 10,),
+                      Row(
+                        children: [
+                          const Text(
+                            'Create an Account',
+                            style: TextStyle(
+                              fontSize: 14,
+                            ),
+                          ),
+                          TextButton(
+                            onPressed: () => showBox(context),
+                            child: const Text(
+                              'Sign up',
+                              style: TextStyle(
+                                fontSize: 14,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  void handleLogin(BuildContext context, String email, String password) async {
+    if (_selectedUserType == null) {
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(
+        content: Text('Please select a user Type'),
+        duration: Duration(seconds: 7),
+      ));
+      return;
+    }
+    try {
+      // Convert email to lowercase for consistency
+      String emailLower = email.toLowerCase();
+      print('Email: $emailLower');
+      print('Password: $password');
+
+      UserCredential userCredential = await FirebaseAuth.instance
+          .signInWithEmailAndPassword(
+        email: emailLower,
+        password: password,
+      );
+
+      // Fetch the user ID after a successful sign-in
+      String userId = FirebaseAuth.instance.currentUser!.uid;
+      print('User ID: $userId');
+
+      // Determine the collection based on the selected user type
+      String collectionName = _selectedUserType == 'students'
+          ? 'students'
+          : 'Faculty';
+      print('Collection Name: $collectionName');
+
+      // Access the corresponding collection
+     //this code not publish here......
+  }
+  void redirectUser(BuildContext context, String userRole) {
+    switch (userRole) {
+      case 'Admin':
+        Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => Admin_page()));
+        break;
+      case 'student':
+        Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => StudentPanel()));
+        break;
+      case 'HOD':
+        Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => HODPanel()));
+        break;
+      case 'Dep_Coordinator':
+        Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => Dep_Coordinator()));
+        break;
+      case 'Exam Controller':
+        Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => Exam_cell()));
+        break;
+      case 'VC':
+        Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => VCPanel()));
+        break;
+      case 'Dean':
+        Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => DeanPanel()));
+        break;
+      case 'Instructor':
+        Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => Instructor()));
+        break;
+      case 'It Support Center':
+        Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => IT_support()));
+        break;
+      case 'Treasure Office':
+        Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => treasure_office()));
+        break;
+      case 'Co-ordinator':
+        Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => Coordinator()));
+        break;
+      default:
+        print('Unknown user role: $userRole');
+    }
+  }
+
+  void showBox(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          content: const Text('Choose User Type'),
+          actions: [
+            ElevatedButton(
+              onPressed: () {
+                Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => panel_Signup()));
+              },
+              child: const Text('Faculty'),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => Signup()));
+              },
+              child: const Text('Student'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+}
